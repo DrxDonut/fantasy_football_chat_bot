@@ -75,13 +75,14 @@ class SlackBot(object):
 
 class DiscordBot(object):
     # Creates Discord Bot to send messages
-    def __init__(self, webhook_url):
+    def __init__(self, webhook_url, standings_url):
         self.webhook_url = webhook_url
+        self.standings_url = standings_url
 
     def __repr__(self):
         return "Discord Webhook Url(%s)" % self.webhook_url
 
-    def send_message(self, text):
+    def send_message(self, text, channel='Main'):
         # Sends a message to the chatroom
         message = "```{0}```".format(text)
         template = {
@@ -89,9 +90,14 @@ class DiscordBot(object):
         }
 
         headers = {'content-type': 'application/json'}
-
-        if self.webhook_url not in (1, "1", ''):
-            r = requests.post(self.webhook_url,
+        channel_choices = {
+            'Main' : self.webhook_url,
+            'Standings' : self.standings_url,
+        }
+        webhook = channel_choices.get(channel, self.webhook_url)
+        
+        if webhook not in (1, "1", ''):
+            r = requests.post(webhook,
                               data=json.dumps(template), headers=headers)
 
             if r.status_code != 204:
@@ -438,6 +444,7 @@ def bot_main(function):
 
     try:
         discord_webhook_url = os.environ["DISCORD_WEBHOOK_URL"]
+        discord_standings_url = os.environ["DISCORD_STANDINGS_URL"]
         str_limit = 3000
     except KeyError:
         discord_webhook_url = 1
@@ -524,6 +531,8 @@ def bot_main(function):
         # discord_bot.send_message("Testing")
 
     text = ''
+    channel = 'Main'
+    
     if function == "get_matchups":
         text = get_matchups(league, random_phrase)
         text = text + "\n\n" + get_projected_scoreboard(league)
@@ -543,6 +552,7 @@ def bot_main(function):
     elif function == "get_trophies":
         text = get_trophies(league)
     elif function == "get_standings":
+        channel = 'Standings'
         text = get_standings(league, top_half_scoring)
         if waiver_report and swid != '{1}' and espn_s2 != '1':
             text += '\n\n' + get_waiver_report(league, faab)
@@ -567,7 +577,7 @@ def bot_main(function):
         for message in messages:
             bot.send_message(message)
             slack_bot.send_message(message)
-            discord_bot.send_message(message)
+            discord_bot.send_message(message, channel)
 
     if test:
         # print "get_final" function
