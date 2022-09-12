@@ -566,6 +566,7 @@ def bot_main(function):
     elif function == "init":
         try:
             text = os.environ["INIT_MSG"]
+            channel = 'Standings'
         except KeyError:
             # do nothing here, empty init message
             pass
