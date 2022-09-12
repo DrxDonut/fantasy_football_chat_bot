@@ -506,7 +506,7 @@ def bot_main(function):
 
     bot = GroupMeBot(bot_id)
     slack_bot = SlackBot(slack_webhook_url)
-    discord_bot = DiscordBot(discord_webhook_url)
+    discord_bot = DiscordBot(discord_webhook_url, discord_standings_url)
 
     if swid == '{1}' or espn_s2 == '1':
         league = League(league_id=league_id, year=year)
